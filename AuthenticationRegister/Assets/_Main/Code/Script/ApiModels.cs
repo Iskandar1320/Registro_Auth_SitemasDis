@@ -2,6 +2,13 @@ using System;
 using System.Collections.Generic;
 
 [Serializable]
+public class AuthData
+{
+    public string username;
+    public string password;
+}
+
+[Serializable]
 public class RegisterRequest
 {
     public string username;
@@ -16,26 +23,29 @@ public class LoginRequest
 }
 
 [Serializable]
+public class UsersResponse
+{
+    public List<User> usuarios;
+}
+
+[Serializable]
+public class UserResponse
+{
+    public User usuario;
+}
+
+[Serializable]
+public class ScoreUpdate
+{
+    public string username;
+    public UserData data;
+}
+
+[Serializable]
 public class UpdateUserRequest
 {
     public string username;
-    public UserUpdateData data;
-}
-
-[Serializable]
-public class UserUpdateData
-{
-    public int score;
-}
-
-[Serializable]
-public class User
-{
-    public string _id;
-    public string uid;
-    public string username;
-    public string state;
-    public int score;
+    public UserData data;
 }
 
 [Serializable]
@@ -46,13 +56,15 @@ public class AuthResponse
 }
 
 [Serializable]
-public class UserResponse
+public class User
 {
-    public User usuario;
+    public string _id;
+    public string username;
+    public UserData data;
 }
 
 [Serializable]
-public class UsersResponse
+public class UserData
 {
-    public List<User> usuarios;
+    public int score;
 }

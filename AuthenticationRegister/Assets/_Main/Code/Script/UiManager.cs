@@ -2,6 +2,13 @@
 using TMPro;
 using UnityEngine;
 
+public enum MessageType
+{
+    Info,
+    Success,
+    Error
+}
+
 public class UIManager : MonoBehaviour
 {
     [Header("Panels")]
@@ -17,7 +24,6 @@ public class UIManager : MonoBehaviour
     [Header("Home UI")]
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text usernameHomeText;
-    //[SerializeField] private TMP_InputField newScoreInputField;
 
     [Header("Project UI")]
     [SerializeField] private TMP_Text projectNameText;
@@ -30,7 +36,7 @@ public class UIManager : MonoBehaviour
 
     private void Awake()
     {
-        //projectNameText.text = "Tu Nombre Completo - Proyecto API Unity";
+        // projectNameText.text = "Tu Nombre Completo - Proyecto API Unity";
     }
 
     public void OnClickLogin()
@@ -40,7 +46,7 @@ public class UIManager : MonoBehaviour
 
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
         {
-            StartCoroutine(SetStatus("Completa usuario y contraseña."));
+            ShowStatus("Completa usuario y contraseña.", MessageType.Error);
             StartCoroutine(InvalidStart());
             return;
         }
@@ -55,7 +61,7 @@ public class UIManager : MonoBehaviour
 
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
         {
-            StartCoroutine(SetStatus("Completa usuario y contraseña."));
+            ShowStatus("Completa usuario y contraseña.", MessageType.Error);
             return;
         }
 
@@ -66,28 +72,28 @@ public class UIManager : MonoBehaviour
     {
         authManager.Logout();
     }
+
     public void OnClickScore()
     {
         if (SessionData.CurrentUser == null)
         {
-            StartCoroutine(SetStatus("No hay usuario logueado."));
+            ShowStatus("No hay usuario logueado.", MessageType.Error);
             return;
         }
 
-        SessionData.CurrentUser.score += 50;
-
-        UpdateScoreText(SessionData.CurrentUser.score);
+        SessionData.CurrentUser.data.score += 50;
+        UpdateScoreText(SessionData.CurrentUser.data.score);
     }
 
     public void OnClickSaveScore()
     {
         if (SessionData.CurrentUser == null)
         {
-            StartCoroutine(SetStatus("No hay usuario logueado."));
+            ShowStatus("No hay usuario logueado.", MessageType.Error);
             return;
         }
 
-        userManager.UpdateScore(SessionData.CurrentUser.score);
+        userManager.UpdateScore(SessionData.CurrentUser.data.score);
     }
 
     public void OnClickShowRanking()
@@ -99,7 +105,10 @@ public class UIManager : MonoBehaviour
     {
         if (SessionData.CurrentUser != null)
         {
-            ShowHomePanel(SessionData.CurrentUser.username, SessionData.CurrentUser.score);
+            ShowHomePanel(
+                SessionData.CurrentUser.username,
+                SessionData.CurrentUser.data.score
+            );
         }
         else
         {
@@ -136,14 +145,37 @@ public class UIManager : MonoBehaviour
         scoreText.text = score.ToString();
     }
 
-    public IEnumerator SetStatus(string message)
+    public void ShowStatus(string message, MessageType type)
+    {
+        StartCoroutine(SetStatus(message, type));
+    }
+
+    private IEnumerator SetStatus(string message, MessageType type)
     {
         statusText.gameObject.SetActive(true);
         statusText.text = message;
+
+        switch (type)
+        {
+            case MessageType.Success:
+                statusText.color = Color.green;
+                break;
+
+            case MessageType.Error:
+                statusText.color = Color.red;
+                break;
+
+            case MessageType.Info:
+            default:
+                statusText.color = Color.white;
+                break;
+        }
+
         yield return new WaitForSeconds(1.5f);
         statusText.gameObject.SetActive(false);
     }
-    public IEnumerator InvalidStart()
+
+    private IEnumerator InvalidStart()
     {
         mensajeInicioInvalido.gameObject.SetActive(true);
         yield return new WaitForSeconds(1.5f);

@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using UnityEngine;
 
 public class RankingManager : MonoBehaviour
@@ -11,13 +10,13 @@ public class RankingManager : MonoBehaviour
 
     [Header("Ranking UI")]
     [SerializeField] private Transform rankingContainer;
-    [SerializeField] private GameObject rankingItemPrefab;
+    [SerializeField] private RankingItemUI rankingItemPrefab;
 
     public void LoadRanking()
     {
         if (!SessionData.IsLoggedIn())
         {
-            StartCoroutine(uiManager.SetStatus("Debes iniciar sesión."));
+            uiManager.ShowStatus("Debes iniciar sesión.", MessageType.Error);
             uiManager.ShowAuthPanel();
             return;
         }
@@ -38,12 +37,12 @@ public class RankingManager : MonoBehaviour
 
                 if (response == null || response.usuarios == null)
                 {
-                    StartCoroutine(uiManager.SetStatus("No se pudo leer el ranking."));
+                    uiManager.ShowStatus("No se pudo leer el ranking.", MessageType.Error);
                     return;
                 }
 
                 List<User> sortedUsers = response.usuarios
-                    .OrderByDescending(user => user.score)
+                    .OrderByDescending(user => user.data.score)
                     .ToList();
 
                 DrawRanking(sortedUsers);
@@ -52,7 +51,7 @@ public class RankingManager : MonoBehaviour
             onError: (error) =>
             {
                 Debug.LogError(error);
-                StartCoroutine(uiManager.SetStatus("Error cargando ranking."));
+                uiManager.ShowStatus("Error cargando ranking.", MessageType.Error);
             });
     }
 
@@ -62,15 +61,8 @@ public class RankingManager : MonoBehaviour
 
         for (int i = 0; i < users.Count; i++)
         {
-            GameObject item = Instantiate(rankingItemPrefab, rankingContainer);
-
-            TMP_Text positionText = item.transform.Find("PositionText").GetComponent<TMP_Text>();
-            TMP_Text usernameText = item.transform.Find("UsernameText").GetComponent<TMP_Text>();
-            TMP_Text scoreText = item.transform.Find("ScoreText").GetComponent<TMP_Text>();
-
-            positionText.text = (i + 1).ToString();
-            usernameText.text = users[i].username;
-            scoreText.text = users[i].score.ToString();
+            RankingItemUI item = Instantiate(rankingItemPrefab, rankingContainer);
+            item.Setup(i + 1, users[i].username, users[i].data.score);
         }
     }
 

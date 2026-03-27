@@ -10,7 +10,7 @@ public class UserManager : MonoBehaviour
     {
         if (!SessionData.IsLoggedIn() || SessionData.CurrentUser == null)
         {
-            StartCoroutine(uiManager.SetStatus("Debes iniciar sesión."));
+            uiManager.ShowStatus("Debes iniciar sesión.", MessageType.Error);
             uiManager.ShowAuthPanel();
             return;
         }
@@ -23,29 +23,33 @@ public class UserManager : MonoBehaviour
         yield return apiClient.Get(
             "/api/usuarios/" + username,
             SessionData.Token,
-            onSuccess: (System.Action<string>)((json) =>
+            onSuccess: (json) =>
             {
                 UserResponse response = JsonUtility.FromJson<UserResponse>(json);
 
                 if (response == null || response.usuario == null)
                 {
                     uiManager.ShowAuthPanel();
-                    StartCoroutine(uiManager.SetStatus("No se pudo restaurar la sesión."));
+                    uiManager.ShowStatus("No se pudo restaurar la sesión.", MessageType.Error);
                     return;
                 }
 
                 SessionData.CurrentUser = response.usuario;
-                uiManager.ShowHomePanel(response.usuario.username, response.usuario.score);
-                StartCoroutine(uiManager.SetStatus("Sesión restaurada."));
-            }),
-            onError: (System.Action<string>)((error) =>
+                uiManager.ShowHomePanel(
+                    response.usuario.username,
+                    response.usuario.data.score
+                );
+
+                uiManager.ShowStatus("Sesión restaurada.", MessageType.Info);
+            },
+            onError: (error) =>
             {
                 SessionData.Clear();
                 SessionStorage.Clear();
                 uiManager.ShowAuthPanel();
-                StartCoroutine(uiManager.SetStatus("Tu sesión expiró. Inicia sesión de nuevo."));
+                uiManager.ShowStatus("Tu sesión expiró. Inicia sesión de nuevo.", MessageType.Error);
                 Debug.LogError(error);
-            }));
+            });
     }
 
     private IEnumerator UpdateScoreCoroutine(int newScore)
@@ -53,7 +57,7 @@ public class UserManager : MonoBehaviour
         UpdateUserRequest requestData = new UpdateUserRequest
         {
             username = SessionData.CurrentUser.username,
-            data = new UserUpdateData
+            data = new UserData
             {
                 score = newScore
             }
@@ -63,14 +67,14 @@ public class UserManager : MonoBehaviour
             "/api/usuarios",
             requestData,
             SessionData.Token,
-            onSuccess: (System.Action<string>)((json) =>
+            onSuccess: (json) =>
             {
-                SessionData.CurrentUser.score = newScore;
+                SessionData.CurrentUser.data.score = newScore;
                 uiManager.UpdateScoreText(newScore);
-                StartCoroutine(uiManager.SetStatus("Score actualizado en el servidor."));
+                uiManager.ShowStatus("Score actualizado en el servidor.", MessageType.Success);
                 Debug.Log("Update OK: " + json);
-            }),
-            onError: (System.Action<string>)((error) =>
+            },
+            onError: (error) =>
             {
                 if (error.Contains("401"))
                 {
@@ -79,8 +83,8 @@ public class UserManager : MonoBehaviour
                     uiManager.ShowAuthPanel();
                 }
 
-                StartCoroutine(uiManager.SetStatus("Error actualizando score:\n" + error));
+                uiManager.ShowStatus("Error actualizando score:\n" + error, MessageType.Error);
                 Debug.LogError(error);
-            }));
+            });
     }
 }

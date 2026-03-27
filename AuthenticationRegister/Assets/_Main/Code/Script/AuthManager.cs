@@ -27,7 +27,7 @@ public class AuthManager : MonoBehaviour
         SessionData.Clear();
         SessionStorage.Clear();
         uiManager.ShowAuthPanel();
-        StartCoroutine(uiManager.SetStatus("Sesión cerrada."));
+        uiManager.ShowStatus("Sesión cerrada.", MessageType.Info);
     }
 
     private void RestoreSession()
@@ -56,16 +56,16 @@ public class AuthManager : MonoBehaviour
         yield return apiClient.PostJson(
             "/api/usuarios",
             requestData,
-            onSuccess: (System.Action<string>)((json) =>
+            onSuccess: (json) =>
             {
-                StartCoroutine(uiManager.SetStatus("Registro exitoso. Ahora inicia sesión."));
+                uiManager.ShowStatus("Registro exitoso. Ahora inicia sesión.", MessageType.Success);
                 Debug.Log("Registro OK: " + json);
-            }),
-            onError: (System.Action<string>)((error) =>
+            },
+            onError: (error) =>
             {
-                StartCoroutine(uiManager.SetStatus("Error en registro:\n" + error));
+                uiManager.ShowStatus("Error en registro:\n" + error, MessageType.Error);
                 Debug.LogError(error);
-            }));
+            });
     }
 
     private IEnumerator LoginCoroutine(string username, string password)
@@ -85,7 +85,7 @@ public class AuthManager : MonoBehaviour
 
                 if (response == null || response.usuario == null || string.IsNullOrEmpty(response.token))
                 {
-                    StartCoroutine(uiManager.SetStatus("No se pudo leer la respuesta del login."));
+                    uiManager.ShowStatus("No se pudo leer la respuesta del login.", MessageType.Error);
                     return;
                 }
 
@@ -93,11 +93,11 @@ public class AuthManager : MonoBehaviour
                 SessionStorage.SaveSession(response.token, response.usuario.username);
 
                 StartCoroutine(userManager.GetProfileCoroutine(response.usuario.username));
-                StartCoroutine(uiManager.SetStatus("Login exitoso."));
+                uiManager.ShowStatus("Login exitoso.", MessageType.Success);
             },
             onError: (error) =>
             {
-                StartCoroutine(uiManager.SetStatus("Error en login:\n" + error));
+                uiManager.ShowStatus("Error en login:\n" + error, MessageType.Error);
                 Debug.LogError(error);
             });
     }
