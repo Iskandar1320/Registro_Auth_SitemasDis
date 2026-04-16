@@ -3906,7 +3906,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b401eacaf80f1a4b8f3478ea0f32633, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ApiClient
-  baseUrl: https://sid-restapi.onrender.com
+  baseUrl: http://127.0.0.1:1234
 --- !u!1 &958066382
 GameObject:
   m_ObjectHideFlags: 0
